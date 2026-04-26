@@ -6,7 +6,7 @@ last_update: 2026-04-26
 
 ## What is Deep Research?
 
-Deep Research is a technique used by giving modern LLMs access to search to allow them to cite sources based on your directions or intent for higher quality outputs that are tied to verifiable sources. They are extended sessions that utilize reasoning models, and mostly every major LLM lab currently has one of these.
+Deep Research is a technique that gives modern LLMs access to search, allowing them to cite sources based on your directions or intent for higher quality outputs tied to verifiable sources. They are extended sessions that utilize reasoning models, and most major LLM labs currently have one of these.
 
 ## What models do you use?
 
