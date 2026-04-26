@@ -1,0 +1,15 @@
+{
+  "name": "deep-research",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deep Research — AI-assisted deep learning reports",
+  "scripts": {
+    "build": "node build.js",
+    "init-db": "node init-db.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "front-matter": "^4.0.2",
+    "marked": "^15.0.0"
+  }
+}
