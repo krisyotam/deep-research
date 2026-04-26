@@ -312,6 +312,7 @@ for (const file of files) {
   const headings = extractHeadings(body);
   let html = marked.parse(body);
   html = addHeadingIds(html, headings);
+  html = html.replace(/<table>/g, '<div class="table-wrap"><table>').replace(/<\/table>/g, '</table></div>');
 
   const sources = getSources(slug);
 

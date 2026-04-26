@@ -376,6 +376,74 @@ body {
 
 .content strong { font-weight: 600; }
 
+/* ── Tables ── */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.content thead {
+  border-bottom: 2px solid var(--border);
+}
+.content th {
+  text-align: left;
+  font-weight: 600;
+  padding: 10px 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.content td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.content tbody tr:last-child td {
+  border-bottom: none;
+}
+.content tbody tr:hover {
+  background: var(--code-bg);
+}
+.content table a {
+  word-break: break-all;
+}
+
+/* ── Blockquotes (nested) ── */
+.content blockquote blockquote {
+  margin-top: 8px;
+  border-left-color: var(--text-dim);
+}
+
+/* ── Definition lists ── */
+.content dl {
+  margin-bottom: 16px;
+}
+.content dt {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.content dd {
+  margin-left: 24px;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+/* ── Images ── */
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+/* ── Overflow wrapper for wide tables on mobile ── */
+.content .table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 20px;
+}
+
 .content hr {
   border: none;
   border-top: 1px solid var(--border);
@@ -648,6 +716,8 @@ body {
   .main { margin-left: 0; padding: 40px 20px 80px; }
   .sources-panel { width: 100%; }
   .toolbar { right: 16px; top: 12px; }
+  .content table { font-size: 0.8rem; }
+  .content th, .content td { padding: 6px 8px; }
 }
 
 /* ── Scrollbar ── */

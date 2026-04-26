@@ -14,7 +14,7 @@ That matters directly for the work you named. Suckless software and a lot of low
 
 ## The criteria that matter for your workload
 
-For the exact mix you described — C, kernel-facing work, suckless tools, some Plan 9 interest, and a simple web stack — the relevant criteria are not "most features" or "coolest shell language." They are: closeness to POSIX `sh`, low configuration entropy, solid interactive editing, enough completion to move quickly, documentation that exists when you need it, and a low chance that your shell becomes a second hobby. Those criteria line up with suckless's own emphasis on simplicity, clarity, and frugality for experienced users.
+For the exact mix you described  --  C, kernel-facing work, suckless tools, some Plan 9 interest, and a simple web stack  --  the relevant criteria are not "most features" or "coolest shell language." They are: closeness to POSIX `sh`, low configuration entropy, solid interactive editing, enough completion to move quickly, documentation that exists when you need it, and a low chance that your shell becomes a second hobby. Those criteria line up with suckless's own emphasis on simplicity, clarity, and frugality for experienced users.
 
 Your Plan 9 interest changes the ranking, but not as much as it first appears. Plan 9 from User Space explicitly warns against putting its `bin` directory ahead of your normal Unix command path because many familiar commands behave differently there. That warning is not anti-Plan 9; it is a reminder that living in Plan 9 semantics on top of Unix is a distinct mode of operation, not a friction-free default for daily Linux work. If you are also maintaining a Node stack and doing general Linux development, that distinction matters.
 
