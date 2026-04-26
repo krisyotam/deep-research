@@ -8,6 +8,7 @@ const DIST = path.join(__dirname, 'dist');
 const CONTENT = path.join(__dirname, 'content');
 const STATIC = path.join(__dirname, 'static');
 const PAGES = path.join(__dirname, 'pages');
+const BASE = process.env.BASE_PATH || '';
 
 // ── Helpers ──
 
@@ -119,12 +120,12 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${data.title} — Deep Research</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
-<body data-slug="${data.slug}">
+<body data-slug="${data.slug}" data-base="${BASE}">
   <div class="layout">
     <nav class="sidebar">
-      <a href="/" class="sidebar-back" title="Back to index">${icons.arrowLeft}</a>
+      <a href="${BASE}/" class="sidebar-back" title="Back to index">${icons.arrowLeft}</a>
       <ul class="toc">
         ${tocHtml}
       </ul>
@@ -175,7 +176,7 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
 
   <script id="raw-markdown" type="text/plain">${rawMarkdown.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</script>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="/static/app.js"></script>
+  <script src="${BASE}/static/app.js"></script>
 </body>
 </html>`;
 }
@@ -183,7 +184,7 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
 function indexPage(entries) {
   const listHtml = entries.map(e => {
     return `<li class="entry-item">
-      <a href="/${e.slug}/">
+      <a href="${BASE}/${e.slug}/">
         <div class="entry-title">${e.title}</div>
         ${e.preview ? `<div class="entry-excerpt">${e.preview}</div>` : ''}
         <div class="entry-meta">
@@ -200,7 +201,7 @@ function indexPage(entries) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Deep Research</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body>
   <button class="page-theme-btn" id="theme-btn" title="Toggle theme"><span class="theme-icon-dark">${icons.moon}</span><span class="theme-icon-light">${icons.sun}</span></button>
@@ -213,15 +214,15 @@ function indexPage(entries) {
       </div>
     </div>
     <nav class="index-nav">
-      <a href="/about/">About</a>
-      <a href="/faq/">FAQ</a>
-      <a href="/graph/">Graph</a>
+      <a href="${BASE}/about/">About</a>
+      <a href="${BASE}/faq/">FAQ</a>
+      <a href="${BASE}/graph/">Graph</a>
     </nav>
     <ul class="entry-list">
       ${listHtml}
     </ul>
   </div>
-  <script src="/static/app.js"></script>
+  <script src="${BASE}/static/app.js"></script>
 </body>
 </html>`;
 }
@@ -234,15 +235,15 @@ function wrapStaticPage(title, bodyPath) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title} — Deep Research</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body>
   <button class="page-theme-btn" id="theme-btn" title="Toggle theme"><span class="theme-icon-dark">${icons.moon}</span><span class="theme-icon-light">${icons.sun}</span></button>
   <div class="page-container">
-    <nav class="page-nav"><a href="/">&larr; Index</a></nav>
+    <nav class="page-nav"><a href="${BASE}/">&larr; Index</a></nav>
     ${body}
   </div>
-  <script src="/static/app.js"></script>
+  <script src="${BASE}/static/app.js"></script>
 </body>
 </html>`;
 }
@@ -264,12 +265,12 @@ function buildFaqPage(mdPath) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${data.title} — Deep Research</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body>
   <button class="page-theme-btn" id="theme-btn" title="Toggle theme"><span class="theme-icon-dark">${icons.moon}</span><span class="theme-icon-light">${icons.sun}</span></button>
   <div class="faq-container">
-    <nav class="page-nav"><a href="/">&larr; Index</a></nav>
+    <nav class="page-nav"><a href="${BASE}/">&larr; Index</a></nav>
     <header class="faq-header">
       <h1>${data.title}</h1>
       <div class="faq-meta">
@@ -285,7 +286,7 @@ function buildFaqPage(mdPath) {
       ${html}
     </div>
   </div>
-  <script src="/static/app.js"></script>
+  <script src="${BASE}/static/app.js"></script>
 </body>
 </html>`;
 }
@@ -382,7 +383,7 @@ const graphPage = `<!DOCTYPE html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Graph — Deep Research</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="${BASE}/static/style.css">
   <style>
     body { overflow: hidden; }
     .graph-wrap { position: fixed; inset: 0; background: var(--bg); }
@@ -407,7 +408,7 @@ const graphPage = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <div class="graph-back"><a href="/" title="Back to index">${icons.arrowLeft}</a></div>
+  <div class="graph-back"><a href="${BASE}/" title="Back to index">${icons.arrowLeft}</a></div>
   <div class="graph-tooltip" id="tooltip"></div>
   <div class="graph-wrap"><svg id="graph"></svg></div>
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -418,7 +419,7 @@ const graphPage = `<!DOCTYPE html>
     const height = window.innerHeight;
     const tooltip = document.getElementById('tooltip');
 
-    fetch('/graph/data.json').then(r => r.json()).then(data => {
+    fetch('${BASE}/graph/data.json').then(r => r.json()).then(data => {
       const simulation = d3.forceSimulation(data.nodes)
         .force('link', d3.forceLink(data.links).id(d => d.id).distance(100).strength(0.3))
         .force('charge', d3.forceManyBody().strength(-200).distanceMax(500))
@@ -471,7 +472,7 @@ const graphPage = `<!DOCTYPE html>
       }).on('mouseout', () => {
         tooltip.classList.remove('visible');
       }).on('click', (e, d) => {
-        window.location.href = '/' + d.id + '/';
+        window.location.href = '${BASE}/' + d.id + '/';
       });
 
       simulation.on('tick', () => {

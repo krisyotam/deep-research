@@ -3,6 +3,8 @@
 (function () {
   'use strict';
 
+  const BASE = document.body.dataset.base || '';
+
   // ── TOC scroll-spy ──
   const tocLinks = document.querySelectorAll('.toc a');
   const sections = [];
@@ -172,7 +174,7 @@
     const svg = d3.select(svgEl);
     svg.selectAll('*').remove();
 
-    fetch('/graph/data.json').then(r => r.json()).then(data => {
+    fetch(BASE + '/graph/data.json').then(r => r.json()).then(data => {
       if (!data.nodes.length) {
         svg.append('text')
           .attr('x', width / 2).attr('y', height / 2)
@@ -237,7 +239,7 @@
       }).on('mouseout', () => {
         graphTooltip.classList.remove('visible');
       }).on('click', (e, d) => {
-        window.location.href = '/' + d.id + '/';
+        window.location.href = BASE + '/' + d.id + '/';
       });
 
       simulation.on('tick', () => {
