@@ -682,18 +682,20 @@ body {
 .graph-modal svg { width: 100%; height: 100%; }
 .graph-modal-tooltip {
   position: absolute;
-  top: 12px; left: 12px;
-  background: hsl(var(--bg));
-  border: 1px solid hsl(var(--border));
-  color: hsl(var(--fg));
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 11px;
+  top: 14px; left: 14px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--fg-color);
+  padding: 6px 12px;
+  border-radius: var(--radius-default);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity 180ms ease;
   z-index: 51;
 }
 .graph-modal-tooltip.visible { opacity: 1; }

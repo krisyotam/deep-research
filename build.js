@@ -509,22 +509,31 @@ const graphPage = `<!DOCTYPE html>
   <link rel="stylesheet" href="${BASE}/static/style.css">
   <style>
     body { overflow: hidden; }
-    .graph-wrap { position: fixed; inset: 0; background: hsl(var(--bg)); }
+    .graph-wrap { position: fixed; inset: 0; background: var(--bg-color); }
     .graph-wrap svg { width: 100%; height: 100%; }
-    .graph-back { position: fixed; top: 16px; left: 16px; z-index: 10; }
+    .graph-back { position: fixed; top: 18px; left: 18px; z-index: 10; }
     .graph-back a {
-      display: flex; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 50%;
-      color: var(--text-muted); text-decoration: none;
-      transition: background 0.15s, color 0.15s;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-default);
+      background: var(--bg-color);
+      color: var(--fg-muted); text-decoration: none;
+      transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
     }
-    .graph-back a:hover { background: var(--bg-hover); color: var(--text); }
-    .graph-back svg { width: 18px; height: 18px; }
+    .graph-back a:hover { background: var(--bg-surface); color: var(--fg-color); border-color: var(--rule-color); }
+    .graph-back svg { width: 15px; height: 15px; }
     .graph-tooltip {
       position: fixed; pointer-events: none;
-      background: var(--bg-surface); border: 1px solid var(--border);
-      color: var(--text); padding: 6px 12px; border-radius: 8px;
-      font-size: 0.8rem; opacity: 0; transition: opacity 0.15s;
+      background: var(--bg-color); border: 1px solid var(--border-color);
+      color: var(--fg-color);
+      padding: 6px 12px;
+      border-radius: var(--radius-default);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: -0.005em;
+      opacity: 0; transition: opacity 180ms ease;
       white-space: nowrap; z-index: 50;
     }
     .graph-tooltip.visible { opacity: 1; }
@@ -544,31 +553,33 @@ const graphPage = `<!DOCTYPE html>
 
     fetch('${BASE}/graph/data.json').then(r => r.json()).then(data => {
       const simulation = d3.forceSimulation(data.nodes)
-        .force('link', d3.forceLink(data.links).id(d => d.id).distance(100).strength(0.3))
-        .force('charge', d3.forceManyBody().strength(-200).distanceMax(500))
+        .force('link', d3.forceLink(data.links).id(d => d.id).distance(110).strength(0.25))
+        .force('charge', d3.forceManyBody().strength(-220).distanceMax(520))
         .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
-        .force('collision', d3.forceCollide(20).strength(0.7))
+        .force('collision', d3.forceCollide(22).strength(0.7))
         .alphaDecay(0.02);
 
       const g = svg.append('g');
 
+      // Monochrome OpenAI style: Stone edges, Carbon nodes, system-ui labels.
       const link = g.append('g')
         .selectAll('line')
         .data(data.links)
         .join('line')
-        .attr('stroke', 'var(--text-dim)')
-        .attr('stroke-width', 0.8)
-        .attr('stroke-opacity', 0.4);
+        .attr('stroke', 'var(--color-stone)')
+        .attr('stroke-width', 0.7)
+        .attr('stroke-opacity', 0.3);
 
       const node = g.append('g')
         .selectAll('circle')
         .data(data.nodes)
         .join('circle')
-        .attr('r', 6)
-        .attr('fill', 'var(--link)')
+        .attr('r', 5)
+        .attr('fill', 'var(--fg-color)')
         .attr('stroke', 'var(--bg-color)')
         .attr('stroke-width', 1.5)
         .style('cursor', 'pointer')
+        .style('transition', 'r 160ms ease')
         .call(d3.drag()
           .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
           .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -579,20 +590,28 @@ const graphPage = `<!DOCTYPE html>
         .selectAll('text')
         .data(data.nodes)
         .join('text')
-        .text(d => d.title)
-        .attr('font-size', '9px')
-        .attr('fill', 'var(--text-muted)')
+        .text(d => d.title.length > 34 ? d.title.slice(0, 32) + '\u2026' : d.title)
+        .attr('font-size', '11px')
+        .attr('font-weight', 500)
+        .attr('fill', 'var(--fg-color)')
         .attr('text-anchor', 'middle')
         .attr('dy', -12)
-        .style('pointer-events', 'none');
+        .style('pointer-events', 'none')
+        .style('font-family', 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif')
+        .style('letter-spacing', '-0.005em')
+        .style('opacity', 0.85);
 
-      node.on('mouseover', (e, d) => {
-        tooltip.textContent = d.title + ' (' + d.model + ')';
+      node.on('mouseover', function (e, d) {
+        d3.select(this).attr('r', 8);
+        link.attr('stroke-opacity', l => (l.source === d || l.target === d) ? 0.85 : 0.1);
+        tooltip.textContent = d.title;
         tooltip.classList.add('visible');
       }).on('mousemove', e => {
         tooltip.style.left = (e.clientX + 12) + 'px';
         tooltip.style.top = (e.clientY - 8) + 'px';
-      }).on('mouseout', () => {
+      }).on('mouseout', function () {
+        d3.select(this).attr('r', 5);
+        link.attr('stroke-opacity', 0.3);
         tooltip.classList.remove('visible');
       }).on('click', (e, d) => {
         window.location.href = '${BASE}/' + d.id + '/';

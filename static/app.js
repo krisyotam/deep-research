@@ -186,33 +186,35 @@
       }
 
       const simulation = d3.forceSimulation(data.nodes)
-        .force('link', d3.forceLink(data.links).id(d => d.id).distance(60).strength(0.3))
-        .force('charge', d3.forceManyBody().strength(-120).distanceMax(400))
+        .force('link', d3.forceLink(data.links).id(d => d.id).distance(70).strength(0.25))
+        .force('charge', d3.forceManyBody().strength(-140).distanceMax(420))
         .force('center', d3.forceCenter(width / 2, height / 2).strength(0.05))
-        .force('collision', d3.forceCollide(10).strength(0.7))
+        .force('collision', d3.forceCollide(12).strength(0.7))
         .force('x', d3.forceX(width / 2).strength(0.03))
         .force('y', d3.forceY(height / 2).strength(0.03))
         .alphaDecay(0.02);
 
       const g = svg.append('g');
 
+      // Monochrome OpenAI style: Stone edges, Carbon nodes, system-ui labels.
       const link = g.append('g')
         .selectAll('line')
         .data(data.links)
         .join('line')
-        .attr('stroke', 'var(--text-dim)')
-        .attr('stroke-width', 0.8)
-        .attr('stroke-opacity', 0.4);
+        .attr('stroke', 'var(--color-stone)')
+        .attr('stroke-width', 0.7)
+        .attr('stroke-opacity', 0.3);
 
       const node = g.append('g')
         .selectAll('circle')
         .data(data.nodes)
         .join('circle')
-        .attr('r', 5)
-        .attr('fill', 'var(--link)')
+        .attr('r', 4.5)
+        .attr('fill', 'var(--fg-color)')
         .attr('stroke', 'var(--bg-color)')
-        .attr('stroke-width', 0.5)
+        .attr('stroke-width', 1.5)
         .style('cursor', 'pointer')
+        .style('transition', 'r 160ms ease, fill 160ms ease')
         .call(d3.drag()
           .on('start', (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
           .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -223,20 +225,26 @@
         .selectAll('text')
         .data(data.nodes)
         .join('text')
-        .text(d => d.title.length > 30 ? d.title.slice(0, 28) + '...' : d.title)
-        .attr('font-size', '9px')
-        .attr('fill', 'var(--text-muted)')
-        .attr('text-anchor', 'start')
-        .attr('dx', 9)
-        .attr('dy', 3)
+        .text(d => d.title.length > 32 ? d.title.slice(0, 30) + '\u2026' : d.title)
+        .attr('font-size', '11px')
+        .attr('font-weight', 500)
+        .attr('fill', 'var(--fg-color)')
+        .attr('text-anchor', 'middle')
+        .attr('dy', -10)
         .style('pointer-events', 'none')
-        .style('font-family', 'sans-serif')
-        .style('font-weight', '600');
+        .style('font-family', 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif')
+        .style('letter-spacing', '-0.005em')
+        .style('opacity', 0);
 
-      node.on('mouseover', (e, d) => {
-        graphTooltip.textContent = d.model + ': ' + d.title;
+      node.on('mouseover', function (e, d) {
+        d3.select(this).attr('r', 7);
+        // Highlight adjacent edges
+        link.attr('stroke-opacity', l => (l.source === d || l.target === d) ? 0.85 : 0.12);
+        graphTooltip.textContent = d.title;
         graphTooltip.classList.add('visible');
-      }).on('mouseout', () => {
+      }).on('mouseout', function () {
+        d3.select(this).attr('r', 4.5);
+        link.attr('stroke-opacity', 0.3);
         graphTooltip.classList.remove('visible');
       }).on('click', (e, d) => {
         window.location.href = BASE + '/' + d.id + '/';
