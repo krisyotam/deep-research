@@ -210,7 +210,7 @@
         .join('circle')
         .attr('r', 5)
         .attr('fill', 'var(--link)')
-        .attr('stroke', 'var(--bg)')
+        .attr('stroke', 'var(--bg-color)')
         .attr('stroke-width', 0.5)
         .style('cursor', 'pointer')
         .call(d3.drag()

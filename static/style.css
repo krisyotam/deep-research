@@ -1,70 +1,172 @@
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* =============================================================================
+   Deep Research — entry / about / faq / graph pages.
+   Design language mirrors krisyotam/share + krisyotam/tools.
+   Index page uses its own static/index.css.
+   ============================================================================= */
 
+/* ── Tokens — OpenAI (ChatGPT) language ─────────────────────────
+   See CLAUDE.md for the full reference + local divergences.       */
 :root {
-  --bg: #212121;
-  --bg-surface: #2a2a2a;
-  --bg-hover: #333;
-  --text: #e8e8e8;
-  --text-muted: #999;
-  --text-dim: #666;
-  --border: #373737;
-  --accent: #e8e8e8;
-  --link: #93b3e0;
-  --code-bg: #1a1a1a;
-  --panel-bg: #2a2a2a;
-  --max-content: 720px;
-  --sidebar-w: 56px;
-  --panel-w: 340px;
+  /* OpenAI named palette */
+  --color-carbon:      #0d0d0d;
+  --color-snow:        #ffffff;
+  --color-fog:         #f9f9f9;
+  --color-pewter:      #5d5d5d;
+  --color-stone:       #8f8f8f;
+  --color-arctic-mist: #ececec;
+  --color-link-blue:   #007aff;
+
+  /* Semantic surfaces (light default) */
+  --bg-color:   var(--color-snow);
+  --bg-surface: var(--color-fog);
+  --bg-hover:   var(--color-arctic-mist);
+  --fg-color:   var(--color-carbon);
+  --fg-muted:   var(--color-pewter);
+  --fg-dim:     var(--color-stone);
+  --border-color: rgba(0,0,0,0.08);
+  --rule-color:   rgba(0,0,0,0.12);
+  --link:         var(--color-link-blue);
+  --code-bg:      var(--color-fog);
+  --panel-bg:     var(--color-snow);
+
+  /* Legacy HSL-triple aliases — preserved so the rest of the
+     stylesheet (toolbar, panel, sidebar) doesn't need a rewrite. */
+  --bg:        0 0% 100%;
+  --fg:        0 0% 5%;
+  --fg-dim-h:  0 0% 56%;
+  --muted:     0 0% 92%;
+  --muted-fg:  0 0% 37%;
+  --border:    0 0% 92%;
+  --rule:      0 0% 86%;
+  --accent:    0 0% 98%;
+
+  /* Aliases used by d3 graph code — keep them resolving to colors */
+  --text:       var(--fg-color);
+  --text-muted: var(--fg-muted);
+  --text-dim:   var(--color-stone);
+
+  /* Type families — OpenAI uses the system stack */
+  --font-ui:    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-title: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+  --font-mono:  ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Aliases for older rules that referenced --serif / --sans / --mono */
+  --serif: var(--font-title);
+  --sans:  var(--font-ui);
+  --mono:  var(--font-mono);
+
+  /* OpenAI type scale */
+  --text-caption:      14px;  --leading-caption:    1.43;
+  --text-body:         16px;  --leading-body:       1.5;
+  --text-subheading:   18px;  --leading-subheading: 1.56;
+  --text-heading:      24px;  --leading-heading:    1;
+
+  /* OpenAI spacing scale */
+  --spacing-4: 4px;   --spacing-6: 6px;    --spacing-8: 8px;
+  --spacing-10: 10px; --spacing-12: 12px;  --spacing-16: 16px;
+  --spacing-20: 20px; --spacing-60: 60px;  --spacing-64: 64px;
+  --spacing-127: 127px;
+
+  /* Radii */
+  --radius-default: 10px;
+  --radius-button:  10px;
+  --radius-pill:    16px;
+  --radius-input:   28px;
+
+  --sidebar-w:    56px;
+  --panel-w:      380px;
+  --max-content:  720px;
+  --max-breakout: 1100px;
 }
 
-/* ── Light mode ── */
-[data-theme="light"] {
-  --bg: #ffffff;
-  --bg-surface: #f7f7f7;
-  --bg-hover: #ebebeb;
-  --text: #1a1a1a;
-  --text-muted: #666;
-  --text-dim: #999;
-  --border: #e0e0e0;
-  --accent: #1a1a1a;
-  --link: #2563eb;
-  --code-bg: #f4f4f4;
-  --panel-bg: #f7f7f7;
+[data-theme="dark"] {
+  --bg-color:     #0d0d0d;
+  --bg-surface:   #141414;
+  --bg-hover:     #1a1a1a;
+  --fg-color:     #f3f3f3;
+  --fg-muted:     #a8a8a8;
+  --fg-dim:       #6f6f6f;
+  --border-color: rgba(255,255,255,0.10);
+  --rule-color:   rgba(255,255,255,0.16);
+  --code-bg:      #141414;
+  --panel-bg:     #0d0d0d;
+
+  --bg:        0 0% 5%;
+  --fg:        0 0% 95%;
+  --fg-dim-h:  0 0% 44%;
+  --muted:     0 0% 8%;
+  --muted-fg:  0 0% 66%;
+  --border:    0 0% 10%;
+  --rule:      0 0% 14%;
+  --accent:    0 0% 8%;
+
+  color-scheme: dark;
 }
 
-/* ── Theme toggle icon visibility ── */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --bg-color:     #0d0d0d;
+    --bg-surface:   #141414;
+    --bg-hover:     #1a1a1a;
+    --fg-color:     #f3f3f3;
+    --fg-muted:     #a8a8a8;
+    --fg-dim:       #6f6f6f;
+    --border-color: rgba(255,255,255,0.10);
+    --rule-color:   rgba(255,255,255,0.16);
+    --code-bg:      #141414;
+    --panel-bg:     #0d0d0d;
+
+    --bg:        0 0% 5%;
+    --fg:        0 0% 95%;
+    --fg-dim-h:  0 0% 44%;
+    --muted:     0 0% 8%;
+    --muted-fg:  0 0% 66%;
+    --border:    0 0% 10%;
+    --rule:      0 0% 14%;
+    --accent:    0 0% 8%;
+  }
+}
+
+/* Theme-icon visibility (Sun shown in dark, Moon shown in light) */
 .theme-icon-light { display: none; }
-.theme-icon-dark { display: flex; }
-[data-theme="light"] .theme-icon-light { display: flex; }
-[data-theme="light"] .theme-icon-dark { display: none; }
+.theme-icon-dark  { display: flex; }
+[data-theme="dark"] .theme-icon-light { display: flex; }
+[data-theme="dark"] .theme-icon-dark  { display: none; }
 
+/* ── Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { font-size: 16px; }
+html, body {
+  background: var(--bg-color);
+  color: var(--fg-color);
+}
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.75;
+  font-family: var(--font-ui);
+  font-feature-settings: "liga" 0;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* ── Layout ── */
-.layout {
-  display: flex;
-  min-height: 100vh;
-}
+/* ── Layout ───────────────────────────────────────────────────── */
+.layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
-/* ── Left sidebar: back + TOC ── */
+/* ── Left sidebar — minimal dot rail + hover tooltips (original) ── */
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   width: var(--sidebar-w);
   height: 100vh;
-  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0;
+  padding: var(--spacing-16) 0;
   z-index: 10;
 }
 
@@ -74,45 +176,44 @@ body {
   justify-content: center;
   width: 32px;
   height: 32px;
-  color: var(--text-muted);
+  color: hsl(var(--muted-fg));
   text-decoration: none;
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
 }
-.sidebar-back:hover { background: var(--bg-hover); color: var(--text); }
+.sidebar-back:hover { background: hsl(var(--accent)); color: hsl(var(--fg)); }
 .sidebar-back svg { width: 18px; height: 18px; }
 
 .toc {
-  margin-top: 24px;
+  margin: auto 0;            /* center the dot cluster in remaining sidebar space */
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  padding: 0 8px;
+  padding: 8px;
   overflow-y: auto;
-  flex: 1;
+  flex: 0 0 auto;            /* take natural height; don't stretch */
+  max-height: calc(100% - 64px);  /* safety: scroll if cluster is taller than viewport */
   scrollbar-width: none;
 }
 .toc::-webkit-scrollbar { display: none; }
 
-.toc li {
-  position: relative;
-}
+.toc li { position: relative; }
 
 .toc a {
   display: block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--text-dim);
+  background: var(--fg-dim);              /* Stone — visible on Fog rail */
   margin: 4px auto;
   transition: background 0.2s, transform 0.2s;
   text-decoration: none;
 }
 .toc a:hover,
 .toc a.active {
-  background: var(--text);
+  background: var(--fg-color);            /* Carbon — focused dot pops */
   transform: scale(1.5);
 }
 
@@ -121,338 +222,238 @@ body {
   left: 48px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
   padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-family: var(--sans);
+  font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
   z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 }
+[data-theme="dark"] .toc-tooltip { box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
 .toc li:hover .toc-tooltip { opacity: 1; }
 
-/* ── Main content ── */
+/* ── Main content column ──────────────────────────────────────── */
 .main {
   margin-left: var(--sidebar-w);
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 60px 40px 120px;
+  padding: 72px 56px 120px;
 }
-
 .content {
   max-width: var(--max-content);
   width: 100%;
 }
 
-/* ── Toolbar (top right) ── */
-.toolbar {
-  position: fixed;
-  top: 16px;
-  right: 24px;
-  display: flex;
-  gap: 8px;
-  z-index: 20;
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  position: relative;
-}
-.toolbar-btn:hover { background: var(--bg-hover); color: var(--text); }
-.toolbar-btn svg { width: 18px; height: 18px; }
-
-/* ── Download dropdown ── */
-.download-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-  min-width: 180px;
-  display: none;
-  flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-.download-menu.open { display: flex; }
-
-.download-menu button {
-  background: none;
-  border: none;
-  color: var(--text);
-  padding: 8px 12px;
-  text-align: left;
-  font-size: 0.875rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-family: inherit;
-}
-.download-menu button:hover { background: var(--bg-hover); }
-
-/* ── Sources panel ── */
-.sources-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: var(--panel-w);
-  height: 100vh;
-  background: var(--panel-bg);
-  border-left: 1px solid var(--border);
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-}
-.sources-panel.open { transform: translateX(0); }
-
-.sources-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.sources-header h3 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text);
-}
-.sources-header .count {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  background: var(--bg);
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-.sources-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
-}
-.sources-close:hover { color: var(--text); }
-.sources-close svg { width: 16px; height: 16px; }
-
-.sources-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 16px;
-}
-
-.source-item {
-  display: block;
-  padding: 10px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: var(--text);
-  transition: background 0.15s;
-  margin-bottom: 4px;
-}
-.source-item:hover { background: var(--bg-hover); }
-
-.source-num {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-.source-title {
-  font-size: 0.85rem;
+/* ── Header section (title + meta) ─────────────────────────────
+   Title: Lora serif — the only font distinction in the document,
+   marking "editorial report" the way OpenAI Sans marks the hero
+   prompt on chatgpt.com. Sized at the heading rung but weight 500.
+   ============================================================== */
+.content > h1 {
+  font-family: var(--font-title);
   font-weight: 500;
-  line-height: 1.4;
-  margin-bottom: 2px;
+  font-size: 36px;
+  letter-spacing: -0.016em;
+  line-height: 1.12;
+  color: var(--fg-color);
+  margin: 0 0 var(--spacing-12);
 }
-.source-url {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ── Typography ── */
-.content h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 8px;
-}
-
 .content-meta {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 40px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+  margin-bottom: var(--spacing-64);
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-10);
 }
-.content-meta .model-badge {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  margin-left: 8px;
+.content-meta time { font-variant-numeric: tabular-nums; }
+.content-meta .sep {
+  color: var(--color-stone);
+  opacity: 0.5;
+  font-size: 12px;
+  line-height: 1;
 }
+.content-meta .meta-tags { color: var(--fg-muted); }
 
+/* ── Content typography — OpenAI ─────────────────────────────────
+   System UI for body and section headings. 16/1.7 (1.7 line-height is
+   our local divergence from 1.5; long-form reading wants it).
+   Headings stay within the 24px max weight 600 rule.
+   =============================================================== */
+.content {
+  font-family: var(--font-ui);
+  font-feature-settings: "liga" 0;
+  font-size: var(--text-body);
+  line-height: 1.7;
+  color: var(--fg-color);
+  font-weight: 400;
+}
 .content h2 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-top: 48px;
-  margin-bottom: 16px;
-  line-height: 1.35;
-}
-
-.content h3 {
-  font-size: 1.1rem;
+  font-family: var(--font-ui);
   font-weight: 600;
-  margin-top: 32px;
-  margin-bottom: 12px;
+  font-size: var(--text-heading);
+  letter-spacing: -0.012em;
+  line-height: 1.15;
+  margin: var(--spacing-64) 0 var(--spacing-16);
+  color: var(--fg-color);
 }
-
-.content p {
-  margin-bottom: 16px;
-  color: var(--text);
+.content h3 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-subheading);
+  letter-spacing: -0.005em;
+  line-height: var(--leading-subheading);
+  margin: 40px 0 var(--spacing-10);
+  color: var(--fg-color);
 }
-
+.content h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-caption);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin: var(--spacing-20) 0 var(--spacing-6);
+}
+.content h5, .content h6 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-caption);
+  color: var(--fg-color);
+  margin: var(--spacing-16) 0 var(--spacing-6);
+}
+.content h2 + h3, .content h3 + h4 { margin-top: var(--spacing-16); }
+.content p { margin-bottom: var(--spacing-16); }
 .content a {
   color: var(--link);
   text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--link) 30%, transparent);
+  padding-bottom: 1px;
+  transition: border-color 140ms ease;
 }
-.content a:hover { text-decoration: underline; }
+.content a:hover { border-bottom-color: var(--link); }
 
-.content ul, .content ol {
-  margin-bottom: 16px;
-  padding-left: 24px;
-}
-.content li { margin-bottom: 6px; }
+.content ul, .content ol { margin: 0 0 var(--spacing-16) 0; padding-left: var(--spacing-20); }
+.content li { margin-bottom: var(--spacing-6); }
 
 .content blockquote {
-  border-left: 3px solid var(--border);
-  padding-left: 16px;
-  color: var(--text-muted);
-  margin-bottom: 16px;
+  border-left: 2px solid var(--rule-color);
+  padding: var(--spacing-4) 0 var(--spacing-4) var(--spacing-16);
+  color: var(--fg-muted);
+  margin: var(--spacing-20) 0;
+}
+.content blockquote blockquote {
+  margin-top: var(--spacing-8);
+  border-left-color: var(--border-color);
+}
+
+.content strong { font-weight: 600; color: var(--fg-color); }
+.content em { font-style: italic; }
+/* Markdown often double-bolds headings with ** — keep heading weight neutral. */
+.content h1 strong, .content h2 strong, .content h3 strong,
+.content h4 strong, .content h5 strong, .content h6 strong {
+  font-weight: inherit;
+  color: inherit;
 }
 
 .content code {
-  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, monospace;
-  font-size: 0.875em;
+  font-family: var(--font-mono);
+  font-size: 14px;
   background: var(--code-bg);
-  padding: 2px 6px;
-  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  padding: 1px 6px;
+  border-radius: var(--radius-default);
 }
-
 .content pre {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.55;
   background: var(--code-bg);
-  border-radius: 8px;
-  padding: 16px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-default);
+  padding: var(--spacing-12) var(--spacing-16);
+  margin: var(--spacing-20) 0;
   overflow-x: auto;
-  margin-bottom: 16px;
-  border: 1px solid var(--border);
 }
-.content pre code {
-  background: none;
-  padding: 0;
-  font-size: 0.85rem;
-  line-height: 1.6;
+.content pre code { background: transparent; border: 0; padding: 0; font-size: inherit; }
+
+.content hr {
+  border: 0;
+  border-top: 1px solid var(--rule-color);
+  margin: var(--spacing-60) 0;
 }
 
-.content strong { font-weight: 600; }
-
-/* ── Tables ── */
-.content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-.content thead {
-  border-bottom: 2px solid var(--border);
-}
-.content th {
-  text-align: left;
-  font-weight: 600;
-  padding: 10px 12px;
-  color: var(--text);
-  white-space: nowrap;
-}
-.content td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-.content tbody tr:last-child td {
-  border-bottom: none;
-}
-.content tbody tr:hover {
-  background: var(--code-bg);
-}
-.content table a {
-  word-break: break-all;
-}
-
-/* ── Blockquotes (nested) ── */
-.content blockquote blockquote {
-  margin-top: 8px;
-  border-left-color: var(--text-dim);
-}
-
-/* ── Definition lists ── */
-.content dl {
-  margin-bottom: 16px;
-}
-.content dt {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.content dd {
-  margin-left: 24px;
-  margin-bottom: 12px;
-  color: var(--text-muted);
-}
-
-/* ── Images ── */
 .content img {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
-  margin: 16px 0;
+  display: block;
+  margin: var(--spacing-20) auto;
+  border-radius: var(--radius-default);
 }
 
-/* ── Overflow wrapper for wide tables on mobile ── */
+/* Tables — break out of the 720px reading column up to 1100px wide,
+   centered within .main, never crossing the 56px sidebar.
+   The table itself uses the OpenAI spacing/density.                */
 .content .table-wrap {
+  position: relative;
+  width: min(var(--max-breakout), calc(100vw - var(--sidebar-w) - var(--spacing-64)));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: var(--spacing-20) 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  margin-bottom: 20px;
+  border-radius: var(--radius-default);
 }
-
-.content hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 40px 0;
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  margin: 0;
 }
+.content thead {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+.content th {
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  padding: var(--spacing-10) var(--spacing-12);
+  white-space: nowrap;
+}
+.content td {
+  padding: var(--spacing-10) var(--spacing-12);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+}
+.content tbody tr:last-child td { border-bottom: none; }
+.content tbody tr:hover { background: var(--bg-surface); }
+.content tbody tr { transition: background 120ms ease; }
 
-/* citation ref inline */
+.content dl { margin-bottom: var(--spacing-16); }
+.content dt { font-weight: 600; margin-bottom: var(--spacing-4); }
+.content dd { margin-left: var(--spacing-20); margin-bottom: var(--spacing-12); color: var(--fg-muted); }
+
 .cite-ref {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
   vertical-align: super;
   color: var(--link);
   cursor: pointer;
@@ -460,277 +461,419 @@ body {
 }
 .cite-ref:hover { text-decoration: underline; }
 
-/* ── Index page ── */
-.index-header {
-  margin-bottom: 24px;
-}
-.index-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.index-header p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.index-nav {
-  margin-bottom: 24px;
-  display: flex;
-  gap: 20px;
-}
-.index-nav a {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 0.15s;
-}
-.index-nav a:hover { color: var(--text); }
-
-/* ── Page theme toggle (top right on non-slug pages) ── */
-.page-theme-btn {
+/* ── Toolbar (top right) ─────────────────────────────────────── */
+.toolbar {
   position: fixed;
-  top: 16px;
+  top: 18px;
   right: 24px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  gap: 6px;
   z-index: 20;
 }
-.page-theme-btn:hover { background: var(--bg-hover); color: var(--text); }
-.page-theme-btn svg { width: 18px; height: 18px; }
+.toolbar-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--bg));
+  color: hsl(var(--fg-dim));
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  position: relative;
+}
+.toolbar-btn:hover { background: hsl(var(--accent)); color: hsl(var(--fg)); border-color: hsl(var(--rule)); }
+.toolbar-btn svg { width: 15px; height: 15px; }
 
-/* ── Epigraph ── */
-.epigraph {
-  margin-bottom: 32px;
-  padding: 0;
+/* ── Download dropdown ───────────────────────────────────────── */
+.download-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 180px;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.08);
 }
-.epigraph blockquote {
-  border-left: 2px solid var(--border);
-  padding-left: 16px;
-  margin: 0 0 8px;
-  color: var(--text-muted);
-  font-style: italic;
-  line-height: 1.7;
-  font-size: 0.9rem;
+[data-theme="dark"] .download-menu { box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+.download-menu.open { display: flex; }
+.download-menu button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: hsl(var(--fg));
+  padding: 8px 12px;
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
 }
-.epigraph cite {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--text-dim);
-  font-style: normal;
-  padding-left: 16px;
-}
+.download-menu button:hover { background: hsl(var(--accent)); }
 
-.entry-list {
-  list-style: none;
-}
-
-.entry-item {
-  border-bottom: 1px solid var(--border);
-}
-
-.entry-item a {
-  display: block;
-  padding: 20px 0;
-  text-decoration: none;
-  color: var(--text);
-  transition: color 0.15s;
-}
-.entry-item a:hover { color: var(--text-muted); }
-
-.entry-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.entry-excerpt {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin-bottom: 6px;
-}
-
-.entry-meta {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  display: flex;
-  gap: 12px;
-}
-
-/* ── Static pages (about, faq) ── */
-.page-container {
-  max-width: 640px;
-  margin: 80px auto;
-  padding: 0 24px;
-}
-.page-container h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 32px;
-}
-.page-container h2 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 12px;
-}
-.page-container p, .page-container li {
-  color: var(--text);
-  line-height: 1.75;
-  margin-bottom: 12px;
-}
-.page-container a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
-.page-container a:hover { color: var(--text); }
-.page-nav {
-  margin-bottom: 48px;
-}
-.page-nav a {
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.85rem;
-  transition: color 0.15s;
-}
-.page-nav a:hover { color: var(--text); }
-
-/* ── FAQ page ── */
-.faq-container {
-  max-width: 640px;
-  margin: 60px auto;
-  padding: 0 24px;
-}
-
-.faq-header {
-  margin-bottom: 32px;
-}
-.faq-header h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-.faq-meta {
-  display: flex;
-  gap: 20px;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-}
-
-.faq-toc {
-  margin-bottom: 40px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.faq-toc h2 {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 10px;
-}
-.faq-toc ol {
-  list-style: none;
-  padding: 0;
+/* ── Sources panel — sexier OpenAI-inspired right rail ─────────── */
+.sources-panel {
+  position: fixed;
+  top: 0; right: 0;
+  width: var(--panel-w);
+  height: 100vh;
+  height: 100dvh;
+  background: hsl(var(--bg));
+  border-left: 1px solid hsl(var(--border));
+  transform: translateX(100%);
+  transition: transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  box-shadow: -20px 0 60px rgba(0,0,0,0.04);
 }
-.faq-toc li a {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+[data-theme="dark"] .sources-panel { box-shadow: -20px 0 60px rgba(0,0,0,0.4); }
+.sources-panel.open { transform: translateX(0); }
+
+.sources-header {
+  padding: 22px 24px 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.sources-header-text { display: flex; flex-direction: column; gap: 4px; }
+.sources-header h3 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.005em;
+  color: hsl(var(--fg));
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sources-header h3 .count {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-fg));
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+.sources-header-sub {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: hsl(var(--muted-fg));
+}
+
+.sources-close {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: hsl(var(--muted-fg));
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  flex-shrink: 0;
+}
+.sources-close:hover { background: hsl(var(--accent)); color: hsl(var(--fg)); border-color: hsl(var(--border)); }
+.sources-close svg { width: 14px; height: 14px; }
+
+.sources-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+.sources-list::-webkit-scrollbar { width: 6px; }
+.sources-list::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+
+.source-item {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 12px;
+  padding: 12px 12px 12px 10px;
+  border-radius: 8px;
   text-decoration: none;
-  transition: color 0.15s;
-  line-height: 1.6;
+  color: hsl(var(--fg));
+  transition: background 140ms ease, transform 140ms ease;
+  margin-bottom: 1px;
+  align-items: start;
+  position: relative;
 }
-.faq-toc li a:hover { color: var(--text); }
+.source-item:hover { background: hsl(var(--accent)); }
+.source-item:active { transform: scale(0.995); }
 
-.faq-body h2 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  margin-top: 36px;
-  margin-bottom: 10px;
-  color: var(--text);
-}
-.faq-body p {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  line-height: 1.75;
-  margin-bottom: 12px;
+/* Favicon — replaces the old numeric chip */
+.source-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  margin-top: 2px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: hsl(var(--accent));
 }
 
-/* ── Graph modal ── */
+.source-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+
+/* Source panel typography — pinned explicitly to the pre-overhaul stack
+   (Inter + JetBrains Mono) so it doesn't drift when global tokens move. */
+.source-title {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: hsl(var(--fg));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+.source-url {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: hsl(var(--muted-fg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Graph modal ─────────────────────────────────────────────── */
 .graph-backdrop {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 50;
   align-items: center;
   justify-content: center;
 }
+[data-theme="dark"] .graph-backdrop { background: rgba(0, 0, 0, 0.65); }
 .graph-backdrop.open { display: flex; }
-
 .graph-modal {
   width: 80vw;
   height: 80vh;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
   position: relative;
   overflow: hidden;
 }
 .graph-modal svg { width: 100%; height: 100%; }
-
 .graph-modal-tooltip {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  color: var(--text);
+  top: 12px; left: 12px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
   padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-family: monospace;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity 150ms ease;
   z-index: 51;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .graph-modal-tooltip.visible { opacity: 1; }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main { margin-left: 0; padding: 40px 20px 80px; }
-  .sources-panel { width: 100%; }
-  .toolbar { right: 16px; top: 12px; }
-  .content table { font-size: 0.8rem; }
-  .content th, .content td { padding: 6px 8px; }
+/* ── Static pages (about, faq, /graph/) ──────────────────────── */
+.page-container {
+  max-width: 640px;
+  margin: 80px auto 64px;
+  padding: 0 32px;
+}
+.page-container h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 28px;
+}
+.page-container h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 20px;
+  margin-top: 36px;
+  margin-bottom: 12px;
+}
+.page-container p, .page-container li {
+  color: hsl(var(--fg));
+  line-height: 1.72;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+.page-container a {
+  color: hsl(var(--fg));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--rule));
+  text-underline-offset: 3px;
+}
+.page-container a:hover { text-decoration-color: hsl(var(--fg-dim)); }
+
+.page-nav {
+  margin-bottom: 48px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.page-nav a {
+  color: hsl(var(--muted-fg));
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.page-nav a:hover { color: hsl(var(--fg)); }
+
+/* Page-level theme button (about / faq) — kept for compatibility */
+.page-theme-btn {
+  position: fixed;
+  top: 16px; right: 24px;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--bg));
+  color: hsl(var(--fg-dim));
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  z-index: 20;
+}
+.page-theme-btn:hover { background: hsl(var(--accent)); color: hsl(var(--fg)); border-color: hsl(var(--rule)); }
+.page-theme-btn svg { width: 16px; height: 16px; }
+
+/* Epigraph (only on legacy pages; not on the new index) */
+.epigraph { margin-bottom: 32px; }
+.epigraph blockquote {
+  border-left: 2px solid hsl(var(--rule));
+  padding-left: 16px;
+  margin: 0 0 8px;
+  color: hsl(var(--muted-fg));
+  font-style: italic;
+  line-height: 1.7;
+  font-size: 14px;
+}
+.epigraph cite {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: hsl(var(--muted-fg));
+  font-style: normal;
+  padding-left: 16px;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+/* FAQ page */
+.faq-container {
+  max-width: 640px;
+  margin: 80px auto 64px;
+  padding: 0 32px;
+}
+.faq-header { margin-bottom: 32px; }
+.faq-header h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.faq-meta {
+  display: flex; gap: 24px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: hsl(var(--muted-fg));
+}
+.faq-toc {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid hsl(var(--rule));
+}
+.faq-toc h2 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: hsl(var(--muted-fg));
+  margin-bottom: 10px;
+}
+.faq-toc ol { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.faq-toc li a {
+  font-size: 14px;
+  color: hsl(var(--muted-fg));
+  text-decoration: none;
+  line-height: 1.6;
+  transition: color 120ms ease;
+}
+.faq-toc li a:hover { color: hsl(var(--fg)); }
+.faq-body h2 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 18px;
+  margin: 36px 0 10px;
+  color: hsl(var(--fg));
+}
+.faq-body p {
+  font-size: 15px;
+  color: hsl(var(--fg));
+  line-height: 1.72;
+  margin-bottom: 12px;
+}
 
-/* ── Print ── */
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 56px 24px 96px; }
+}
+@media (max-width: 560px) {
+  .toolbar { right: 14px; top: 14px; }
+  .sources-panel { width: 100%; }
+  .content table { font-size: 13px; }
+  .content th, .content td { padding: 6px 8px; }
+  .entry-title { font-size: 28px; }
+  .page-container, .faq-container { padding: 0 22px; margin: 56px auto 48px; }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--rule)); }
+
+/* ── Print ─────────────────────────────────────────────────── */
 @media print {
-  .sidebar, .toolbar, .sources-panel { display: none !important; }
+  .sidebar, .toolbar, .sources-panel, .page-theme-btn { display: none !important; }
   .main { margin-left: 0; padding: 0; }
-  body { background: #fff; color: #000; }
+  body { background: #fff; color: #000; font-family: Georgia, serif; }
   .content a { color: #000; }
-  .content pre { border-color: #ccc; }
+  .content pre { border-color: #ccc; background: #f6f6f6; }
 }

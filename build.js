@@ -67,9 +67,19 @@ const marked = new Marked();
 
 function formatDate(d) {
   if (!d) return '';
-  if (typeof d === 'string') return d;
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+  // YYYY.MM.DD — used everywhere date is shown to the reader.
+  let y, m, day;
+  if (typeof d === 'string') {
+    // Expect YYYY-MM-DD; if anything else, just substitute dashes for dots.
+    const m1 = d.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m1) { y = m1[1]; m = m1[2]; day = m1[3]; }
+    else return d.replace(/-/g, '.');
+  } else {
+    y = String(d.getUTCFullYear());
+    m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    day = String(d.getUTCDate()).padStart(2, '0');
+  }
+  return `${y}.${m}.${day}`;
 }
 
 function extractHeadings(markdown) {
@@ -100,17 +110,23 @@ function addHeadingIds(html, headings) {
 // ── Templates ──
 
 function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
+  // Left sidebar: keep the original minimal dot+tooltip pattern.
   const tocHtml = headings.map(h =>
     `<li><a href="#${h.id}"></a><span class="toc-tooltip">${h.text}</span></li>`
-  ).join('\n');
+  ).join('\n        ');
 
-  const sourcesHtml = sources.map(s =>
-    `<a class="source-item" href="${s.url}" target="_blank" rel="noopener">
-      <div class="source-num">${s.position}</div>
-      <div class="source-title">${s.title}</div>
-      <div class="source-url">${s.url}</div>
-    </a>`
-  ).join('\n');
+  const sourcesHtml = sources.map(s => {
+    let host = s.url;
+    try { host = new URL(s.url).hostname.replace(/^www\./, ''); } catch (e) {}
+    const favicon = `https://icons.duckduckgo.com/ip3/${host}.ico`;
+    return `<a class="source-item" href="${s.url}" target="_blank" rel="noopener">
+      <img class="source-icon" src="${favicon}" alt="" width="20" height="20" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
+      <div class="source-body">
+        <div class="source-title">${s.title}</div>
+        <div class="source-url">${host}</div>
+      </div>
+    </a>`;
+  }).join('\n');
 
   const sourceCount = sources.length;
 
@@ -120,6 +136,10 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${data.title} — Deep Research</title>
+  <script>(function(){try{var t=localStorage.getItem('dr-theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body data-slug="${data.slug}" data-base="${BASE}">
@@ -135,7 +155,14 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
       <div class="content">
         <h1>${data.title}</h1>
         <div class="content-meta">
-          ${formatDate(data.date)}<span class="model-badge">${data.model}</span>
+          <time datetime="${data.date instanceof Date ? data.date.toISOString().slice(0,10) : data.date}">${formatDate(data.date)}</time>
+          <span class="sep">&middot;</span>
+          <span>${data.model}</span>
+          ${Array.isArray(data.tags) && data.tags.length
+            ? `<span class="sep">&middot;</span><span class="meta-tags">${data.tags.join(', ')}</span>`
+            : (typeof data.tags === 'string' && data.tags
+              ? `<span class="sep">&middot;</span><span class="meta-tags">${data.tags}</span>`
+              : '')}
         </div>
         ${bodyHtml}
       </div>
@@ -159,8 +186,11 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
 
   <aside class="sources-panel" id="sources-panel">
     <div class="sources-header">
-      <h3>Sources <span class="count">${sourceCount}</span></h3>
-      <button class="sources-close" id="sources-close">${icons.x}</button>
+      <div class="sources-header-text">
+        <h3>Sources <span class="count">${sourceCount}</span></h3>
+        <div class="sources-header-sub">cited references</div>
+      </div>
+      <button class="sources-close" id="sources-close" aria-label="Close sources">${icons.x}</button>
     </div>
     <div class="sources-list">
       ${sourcesHtml}
@@ -182,18 +212,18 @@ function entryPage(data, bodyHtml, headings, sources, rawMarkdown) {
 }
 
 function indexPage(entries) {
-  const listHtml = entries.map(e => {
-    return `<li class="entry-item">
-      <a href="${BASE}/${e.slug}/">
-        <div class="entry-title">${e.title}</div>
-        ${e.preview ? `<div class="entry-excerpt">${e.preview}</div>` : ''}
-        <div class="entry-meta">
-          <span>${formatDate(e.date)}</span>
-          <span>${e.model}</span>
-        </div>
-      </a>
-    </li>`;
-  }).join('\n');
+  // Names-only table — drops description, tags, date, model from the index.
+  // Reading those forces a click into the entry.
+  const rowsHtml = entries
+    .slice()
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .map(e => {
+      const hay = (e.title + ' ' + (e.model || '') + ' ' + (e.preview || '')).toLowerCase();
+      return `<tr data-search="${hay.replace(/"/g, '&quot;')}">`
+           + `<td class="name"><a href="${BASE}/${e.slug}/">${e.title}</a></td>`
+           + `</tr>`;
+    })
+    .join('\n      ');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -201,28 +231,107 @@ function indexPage(entries) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Deep Research</title>
-  <link rel="stylesheet" href="${BASE}/static/style.css">
+  <meta name="description" content="Long-form research reports paired with the sources they pulled from.">
+  <script>(function(){try{var t=localStorage.getItem('dr-theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="${BASE}/static/index.css">
 </head>
 <body>
-  <button class="page-theme-btn" id="theme-btn" title="Toggle theme"><span class="theme-icon-dark">${icons.moon}</span><span class="theme-icon-light">${icons.sun}</span></button>
-  <div class="page-container">
-    <div class="index-header">
-      <h1>Deep Research</h1>
-      <div class="epigraph">
-        <blockquote>I resolved to reject as absolutely false everything in which I could imagine the least doubt&hellip; and to suppose that everything I saw was false; to believe that none of the things represented to me by my memory ever existed&hellip; Thus, because our senses sometimes deceive us, I wished to suppose that nothing was such as they made us imagine it to be&hellip; But immediately afterward I noticed that while I thus wished to think all things false, it must necessarily be that I, who thought this, was something.</blockquote>
-        <cite>Ren&eacute; Descartes, <em>Discourse on the Method</em> (1637)</cite>
+ <div class="page">
+  <div class="grow">
+  <main class="shell">
+    <div class="head">
+      <div class="brand">
+        <h1>deep research</h1>
+        <p>long-form research reports paired with the sources they pulled from</p>
       </div>
+      <button class="toggle" data-theme-toggle aria-label="Switch to dark" type="button">
+        <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </button>
     </div>
-    <nav class="index-nav">
-      <a href="${BASE}/about/">About</a>
-      <a href="${BASE}/faq/">FAQ</a>
-      <a href="${BASE}/graph/">Graph</a>
+
+    <nav class="nav-row">
+      <a href="${BASE}/about/">about</a>
+      <a href="${BASE}/faq/">faq</a>
+      <a href="${BASE}/graph/">graph</a>
     </nav>
-    <ul class="entry-list">
-      ${listHtml}
-    </ul>
+
+    <div class="search">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      <input id="q" type="text" placeholder="search" autocomplete="off" spellcheck="false">
+      <kbd class="search-kbd">/</kbd>
+    </div>
+
+    <table class="entries" id="entries">
+      <tbody>
+      ${rowsHtml}
+      </tbody>
+    </table>
+
+    <p class="empty">nothing matches.</p>
+  </main>
   </div>
-  <script src="${BASE}/static/app.js"></script>
+
+  <footer class="shell-footer">
+    <div class="foot-inner">
+      <span><span data-visible-count>${entries.length}</span> / <span data-total-count>${entries.length}</span> reports</span>
+      <span><a href="https://github.com/krisyotam/deep-research" rel="noopener">github.com/krisyotam/deep-research</a></span>
+    </div>
+  </footer>
+ </div>
+
+<script>
+  // theme toggle — flips between data-theme="light" and "dark"
+  (function () {
+    var btn = document.querySelector('[data-theme-toggle]');
+    if (!btn) return;
+    function paintLabel() {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.setAttribute('aria-label', dark ? 'Switch to light' : 'Switch to dark');
+    }
+    paintLabel();
+    btn.addEventListener('click', function () {
+      var h = document.documentElement;
+      var dark = h.getAttribute('data-theme') === 'dark';
+      var next = dark ? 'light' : 'dark';
+      h.setAttribute('data-theme', next);
+      try { localStorage.setItem('dr-theme', next); } catch (e) {}
+      paintLabel();
+    });
+  })();
+
+  // search filter — same pattern as share / tools / anki
+  (function () {
+    var input = document.getElementById('q');
+    if (!input) return;
+    var empty = document.querySelector('.empty');
+    var visEl = document.querySelector('[data-visible-count]');
+    var tbody = document.querySelector('#entries tbody');
+    function filter() {
+      var q = input.value.trim().toLowerCase();
+      var rows = tbody.querySelectorAll('tr');
+      var visible = 0;
+      rows.forEach(function (tr) {
+        if (!q) { tr.classList.remove('hidden'); visible++; return; }
+        var hay = tr.getAttribute('data-search') || '';
+        var match = hay.indexOf(q) !== -1;
+        tr.classList.toggle('hidden', !match);
+        if (match) visible++;
+      });
+      if (visEl) visEl.textContent = visible;
+      if (empty) empty.classList.toggle('show', visible === 0);
+    }
+    input.addEventListener('input', filter);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+      if (e.key === 'Escape' && document.activeElement === input) { input.value = ''; filter(); input.blur(); }
+    });
+    filter();
+  })();
+</script>
 </body>
 </html>`;
 }
@@ -235,6 +344,10 @@ function wrapStaticPage(title, bodyPath) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${title} — Deep Research</title>
+  <script>(function(){try{var t=localStorage.getItem('dr-theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body>
@@ -265,6 +378,10 @@ function buildFaqPage(mdPath) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${data.title} — Deep Research</title>
+  <script>(function(){try{var t=localStorage.getItem('dr-theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${BASE}/static/style.css">
 </head>
 <body>
@@ -298,6 +415,7 @@ ensureDir(path.join(DIST, 'static'));
 
 // Copy static assets
 copyFile(path.join(STATIC, 'style.css'), path.join(DIST, 'static', 'style.css'));
+copyFile(path.join(STATIC, 'index.css'), path.join(DIST, 'static', 'index.css'));
 copyFile(path.join(STATIC, 'app.js'), path.join(DIST, 'static', 'app.js'));
 
 // Build entries
@@ -384,10 +502,14 @@ const graphPage = `<!DOCTYPE html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Graph — Deep Research</title>
+  <script>(function(){try{var t=localStorage.getItem('dr-theme');if(t){document.documentElement.setAttribute('data-theme',t);}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="${BASE}/static/style.css">
   <style>
     body { overflow: hidden; }
-    .graph-wrap { position: fixed; inset: 0; background: var(--bg); }
+    .graph-wrap { position: fixed; inset: 0; background: hsl(var(--bg)); }
     .graph-wrap svg { width: 100%; height: 100%; }
     .graph-back { position: fixed; top: 16px; left: 16px; z-index: 10; }
     .graph-back a {
@@ -444,7 +566,7 @@ const graphPage = `<!DOCTYPE html>
         .join('circle')
         .attr('r', 6)
         .attr('fill', 'var(--link)')
-        .attr('stroke', 'var(--bg)')
+        .attr('stroke', 'var(--bg-color)')
         .attr('stroke-width', 1.5)
         .style('cursor', 'pointer')
         .call(d3.drag()
