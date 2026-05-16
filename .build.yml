@@ -7,7 +7,7 @@ tasks:
         set -eu
         cd ~/deep-research
         git fetch --quiet origin
-        git reset --hard origin/main
+        git reset --hard origin/master
         npm ci --silent
         npm run build
         echo "deep-research rebuilt"
