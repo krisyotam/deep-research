@@ -8,6 +8,8 @@ tasks:
         cd ~/deep-research
         git fetch --quiet origin
         git reset --hard origin/master
+        git submodule sync --recursive
+        git submodule update --init --recursive
         npm ci --silent
         npm run build
         echo "deep-research rebuilt"
