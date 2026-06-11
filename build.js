@@ -216,7 +216,11 @@ function indexPage(entries) {
   // Reading those forces a click into the entry.
   const rowsHtml = entries
     .slice()
-    .sort((a, b) => a.title.localeCompare(b.title))
+    .sort((a, b) => {
+      const da = a.date instanceof Date ? a.date.getTime() : new Date(a.date || 0).getTime();
+      const db = b.date instanceof Date ? b.date.getTime() : new Date(b.date || 0).getTime();
+      return db - da;
+    })
     .map(e => {
       const hay = (e.title + ' ' + (e.model || '') + ' ' + (e.preview || '')).toLowerCase();
       return `<tr data-search="${hay.replace(/"/g, '&quot;')}">`
