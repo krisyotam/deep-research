@@ -11,6 +11,7 @@ tasks:
         git submodule sync --recursive
         git submodule update --init --recursive
         npm ci --silent
-        npm run build
-        echo "deep-research rebuilt"
+        BASE_PATH=/deep-research npm run build
+        rsync -a --delete dist/ /mnt/storage/deep-research/
+        echo "deep-research rebuilt and published"
       '
