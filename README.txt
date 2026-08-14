@@ -9,7 +9,7 @@ STRUCTURE
 
   sources.db          Source material database
   prompts.db          Research prompt history
-  content/            Generated research documents
+  content/            Research reports (markdown), formerly the deep-research-texts / reports submodule
   pages/              Page templates
   static/             Static assets
   dist/               Build output

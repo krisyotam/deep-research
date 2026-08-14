@@ -8,8 +8,6 @@ tasks:
         cd ~/deep-research
         git fetch --quiet origin
         git reset --hard origin/master
-        git submodule sync --recursive
-        git submodule update --init --recursive
         npm ci --silent
         BASE_PATH=/deep-research npm run build
         rsync -a --delete dist/ /mnt/storage/deep-research/
